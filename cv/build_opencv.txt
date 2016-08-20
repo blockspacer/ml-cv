@@ -24,7 +24,7 @@ cmake \
 -DBUILD_opencv_calib3d=OFF \
 -DBUILD_opencv_contrib=OFF \
 -DBUILD_opencv_core=ON \
--DBUILD_opencv_features2d=ON \
+-DBUILD_opencv_features2d=OFF \
 -DBUILD_opencv_flann=OFF \
 -DBUILD_opencv_gpu=OFF \
 -DBUILD_opencv_highgui=ON \
@@ -33,8 +33,8 @@ cmake \
 -DBUILD_opencv_legacy=OFF \
 -DBUILD_opencv_ml=ON \
 -DBUILD_opencv_nonfree=OFF \
--DBUILD_opencv_objdetect=ON \
--DBUILD_opencv_photo=ON \
+-DBUILD_opencv_objdetect=OFF \
+-DBUILD_opencv_photo=OFF \
 -DBUILD_opencv_python=OFF \
 -DBUILD_opencv_stitching=OFF \
 -DBUILD_opencv_ts=OFF \
