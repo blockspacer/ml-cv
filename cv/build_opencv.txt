@@ -41,6 +41,8 @@ cmake \
 -DBUILD_opencv_video=OFF \
 -DBUILD_opencv_videostab=OFF \
 -DBUILD_opencv_world=OFF \
+-DWITH_JPEG \
+-DWITH_PNG \
 -DENABLE_POWERPC=OFF \
 -DENABLE_SSE=OFF \
 -DENABLE_SSE2=OFF \
