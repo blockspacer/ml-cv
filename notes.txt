@@ -11,3 +11,8 @@
 Typical errors:
 1. Wrong metrix
 2.
+
+
+Improve:
+http://machinelearningmastery.com/improve-machine-learning-results-with-boosting-bagging-and-blending-ensemble-methods-in-weka/
+bagging, boosting, blending
