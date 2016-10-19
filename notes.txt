@@ -16,3 +16,6 @@ Typical errors:
 Improve:
 http://machinelearningmastery.com/improve-machine-learning-results-with-boosting-bagging-and-blending-ensemble-methods-in-weka/
 bagging, boosting, blending
+
+Troubles:
+imbalance - http://stats.stackexchange.com/questions/21592/optimising-for-precision-recall-curves-under-class-imbalance?rq=1
