@@ -19,7 +19,7 @@ bagging, boosting, blending
 
 Troubles:
 imbalance - http://stats.stackexchange.com/questions/21592/optimising-for-precision-recall-curves-under-class-imbalance?rq=1
-
+!!! http://machinelearningmastery.com/tactics-to-combat-imbalanced-classes-in-your-machine-learning-dataset/
 
 Tricks:
 add to train only samples with misses
