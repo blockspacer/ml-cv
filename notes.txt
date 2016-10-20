@@ -1,3 +1,5 @@
+//======================================================================
+
 -1. Интуиция!!!
 0. Получаем данны
 1. Изучаем их!!! - важно, дисперсии, средние... outliners!!!!
@@ -23,3 +25,18 @@ imbalance - http://stats.stackexchange.com/questions/21592/optimising-for-precis
 
 Tricks:
 add to train only samples with misses
+
+//=====================================================================
+
+From Intel DAAL:
+- Data managment
+- Analysis - differenct preproc and ...
+https://software.intel.com/ru-ru/node/564608
+- Training and prediction
+
+From skikit-learn:
+- ...
+
+//=====================================================================
+2d/3d + optic
+Descr + Inf. stat -> ml -> math optimize -> soft+hard
