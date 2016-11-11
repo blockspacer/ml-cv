@@ -1,3 +1,42 @@
- 
+//======================================================================
+
+-1. Интуиция!!!
 0. Получаем данны
-1. Изучаем их!!! - важно, дисперсии, средние...
+1. Изучаем их!!! - важно, дисперсии, средние... outliners!!!!
+Что подаешь как обучающие выборки влияет на результат
+2. Масштабируем min/max, ...
+3. Test
+
+Как можно меньше фич с как можно большей информацией
+
+
+Typical errors:
+1. Wrong metrix
+2.
+
+
+Improve:
+http://machinelearningmastery.com/improve-machine-learning-results-with-boosting-bagging-and-blending-ensemble-methods-in-weka/
+bagging, boosting, blending
+
+Troubles:
+imbalance - http://stats.stackexchange.com/questions/21592/optimising-for-precision-recall-curves-under-class-imbalance?rq=1
+!!! http://machinelearningmastery.com/tactics-to-combat-imbalanced-classes-in-your-machine-learning-dataset/
+
+Tricks:
+add to train only samples with misses
+
+//=====================================================================
+
+From Intel DAAL:
+- Data managment
+- Analysis - differenct preproc and ...
+https://software.intel.com/ru-ru/node/564608
+- Training and prediction
+
+From skikit-learn:
+- ...
+
+//=====================================================================
+2d/3d + optic
+Descr + Inf. stat -> ml -> math optimize -> soft+hard
