@@ -25,6 +25,7 @@ import cv2
 import numpy as np
 import numpy
 
+print cv2.__version__
 
 #https://github.com/utiasSTARS/pykitti
 import pykitti
