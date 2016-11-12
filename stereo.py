@@ -1,5 +1,45 @@
 # encoding: utf-8
 
+### Global alg:
+# http://aishack.in/tutorials/calibrating-undistorting-opencv-oh-yeah/
+# http://stackoverflow.com/questions/15018620/findchessboardcorners-cannot-detect-chessboard-on-very-large-images-by-long-foca
+# Looks good - http://docs.opencv.org/trunk/dc/dbb/tutorial_py_calibration.html
+#
+# Полный алгоритм
+# http://moluch.ru/archive/118/32662/
+
+# Kinnlect
+# https://habrahabr.ru/post/272629/
+
+# Step 0: On cam and stereo pair calibrate - Очень важно !!!
+# FOR START
+#
+# Q:Как и какую ошибк минимизирвоать? Как посчитать?
+# "Please make sure you have sufficient number of images at different
+# depth form camera and at different
+# orientation that will lead to less re projection error"
+# A: cv2.calibrateCamera - return reproj. error, Но тоже недостаточно
+# http://stackoverflow.com/questions/11918315/does-a-smaller-reprojection-error-always-means-better-calibration
+#
+# Q: Что на зависит от установки пары? K, K', F, R'(?) T', F, E
+# A: а разве еще что-то нужно из матриц?
+#
+# Good advice: http://stackoverflow.com/questions/12794876/how-to-verify-the-correctness-of-calibration-of-a-webcam
+# Good advice: http://stackoverflow.com/questions/24130884/opencv-stereo-camera-calibration-image-rectification
+# "Now, about the stereo calibration itself.
+# Best way that I found to achieve a good calibration is to
+# separately calibrate each camera intrinsics (using the calibrateCamera
+# function) then the extrinsics (using stereoCalibrate) using the
+#  intrinsics as a guess. "
+
+# Step 1: ???
+
+# Step 2: ???
+
+####
+
+
+
 # All
 # http://www.cvlibs.net/datasets/kitti/eval_stereo_flow.php?benchmark=stereo
 
@@ -87,6 +127,9 @@ def find_stereopairs():
     # Make depth map ??
 
     pass
+
+# fixme: может сразу сделать стерео калибровку
+# http://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
 
 if __name__ == '__main__':
     # A*[R|t], K - rotation
