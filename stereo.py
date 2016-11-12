@@ -31,6 +31,8 @@
 # separately calibrate each camera intrinsics (using the calibrateCamera
 # function) then the extrinsics (using stereoCalibrate) using the
 #  intrinsics as a guess. "
+# fixme: но будет не так, скорее всего будет две отдельно откалибр.(K, R, T...) надеюсь в одной системе коорд. где-то
+# и из них нужно будет вычислить R, T, F степео пары
 
 # Step 1: ???
 
