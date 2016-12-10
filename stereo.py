@@ -59,7 +59,7 @@
 
 # After rectification
 # !!! Good one
-#http://www.cvlibs.net/datasets/karlsruhe_sequences/
+# http://www.cvlibs.net/datasets/karlsruhe_sequences/
 
 # Troubles:
 # Разная яркость картинки - автоматы
@@ -70,8 +70,14 @@ import numpy
 
 print cv2.__version__
 
-#https://github.com/utiasSTARS/pykitti
+from matplotlib import pyplot as plt
+
+# https://github.com/utiasSTARS/pykitti
+import sys
+
+sys.path.append("pykitti_master")  # fixme: baaaad...
 import pykitti
+
 
 def load_params(fn):
     params_str = None
@@ -108,6 +114,7 @@ def load_params(fn):
 def get_Kl(params):
     return params['cam0']
 
+
 def get_Kr(params):
     return params['cam1']
 
@@ -131,80 +138,127 @@ def find_stereopairs():
 
     pass
 
+
 # fixme: может сразу сделать стерео калибровку
 # http://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
 
+def do_it():
+    basedir = '/home/zaqwes/tools/datasets'
+    date = '2011_09_26'
+    drive = '0052'
+
+    # The range argument is optional - default is None, which loads the whole dataset
+    dataset = pykitti.raw(basedir, date, drive, range(0, 50, 5))
+
+    # Data are loaded only if requested
+    dataset.load_calib()
+    print dataset.calib.P_rect_00
+    print dataset.calib.P_rect_01
+
+    # Calc back, to real coord system
+    print dataset.calib.T_01
+    # print dataset.P_rect_01
+
+    dataset.load_gray(format='cv2')  # Loads images as uint8 grayscale
+    # dataset.load_rgb(format='cv2')  # Loads images as uint8 with BGR ordering
+
+    stereo = cv2.StereoBM_create(numDisparities=128, blockSize=15)
+    disp_gray = stereo.compute(dataset.gray[0].left, dataset.gray[0].right)
+
+    # fixme: что лежит по этим индексам
+    # это номер стереопары изображений - 0-1, 2-3 камеры
+    #print dataset.gray[1]
+
+    # plt.imshow(disp_gray)
+    # plt.show()
+
+    # How calc Q?
+
+    # dataset.gray
+
+
+def do_it1():
+    # Parse cam params
+    # http://wiki.ros.org/kinect_calibration/technical
+    root = "dataset-2014-bicycle1/"
+    fn = root + "calib.txt"
+    params = load_params(fn)
+
+    # fixme: почему cx1 != cx0, baseline != 0
+    # fixme: как из этих матриц получить что-то?
+    print get_Kl(params) - get_Kr(params)
+
+    X, Y, Z = 0., 0, 1
+    M = np.array([[X, Y, Z, 1.]]).T
+    P0 = get_Kl(params)
+    K = np.c_[P0, np.zeros(3)]
+    print K
+    sm = np.dot(K, M)
+    UV = sm / sm[2][0]
+    print np.array(UV, np.int32)
+
+    # Task0: Move camera center?
+
+    # TaskN: rectification
+
+    # Load images
+    img = cv2.imread(root + 'im0.png')  # , 0)
+    cv2.circle(img, (447, 63), 63, (0, 0, 255), -1)
+
+    # Draw
+    small = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
+    # cv2.imshow('image', small)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # Article:
+    # http://ece631web.groups.et.byu.net/Lectures/ECEn631%2014%20-%20Calibration%20and%20Rectification.pdf
+    #
+    # T = Ol-Or
+
+
 if __name__ == '__main__':
-    # A*[R|t], K - rotation
-    # K = A ?
-    # [R|t] - extrinsic params
-    # A - intris.
-    # R - rotation-translation
+    """
+        A*[R|t], K - rotation
+    K = A ?
+    [R|t] - extrinsic params
+    A - intris.
+    R - rotation-translation
 
-    # Need Intcisics/Intr Params BOTH!!
-    # "Let P be a camera matrix representing a general projective camera.
-    # We wish to find the
-    # camera centre, the orientation of the camera and the internal parameters of the camera
-    # from P."
+    Need Intcisics/Intr Params BOTH!!
+    "Let P be a camera matrix representing a general projective camera.
+    We wish to find the
+    camera centre, the orientation of the camera and the internal parameters of the camera
+    from P."
 
-    # P = A*[R|t] - camera projection matrix
-    # x = P*X
+    P = A*[R|t] - camera projection matrix
+    x = P*X
 
-    # P = K[I|0]  P'= K' [R'|t']
-    # Test dataset P = K[I|0], P'= K'[I|t]
+    P = K[I|0]  P'= K' [R'|t']
+    Test dataset P = K[I|0], P'= K'[I|t]
 
-    # The epipolar geometry is represented by a 3 × 3
-    # matrix called the fundamental matrix F.
+    The epipolar geometry is represented by a 3 × 3
+    matrix called the fundamental matrix F.
 
-    # K - camera calibr. matrix
-    # K -> K + R -> K(internal) + (tilda_C + R)(external) -> t = -R * tilda_C
-    # x = KR[I|-tilda_C]X
+    K - camera calibr. matrix
+    K -> K + R -> K(internal) + (tilda_C + R)(external) -> t = -R * tilda_C
+    x = KR[I|-tilda_C]X
 
-    # F - for epipolar
+    F - for epipolar
 
-    # COORDS:
-    # - camera coordinate frame
-    # - world coordinate frame
+    COORDS:
+    - camera coordinate frame
+    - world coordinate frame
 
-    # How split P?
-    # decomposeProjectionMatrix
+    How split P?
+    decomposeProjectionMatrix
+
+    """
+
+    np.set_printoptions(precision=4, suppress=True)
+
+    if True:
+        do_it()
 
     if False:
-        # Parse cam params
-        # http://wiki.ros.org/kinect_calibration/technical
-        root = "dataset-2014-bicycle1/"
-        fn = root + "calib.txt"
-        params = load_params(fn)
-
-        # fixme: почему cx1 != cx0, baseline != 0
-        # fixme: как из этих матриц получить что-то?
-        print get_Kl(params) - get_Kr(params)
-
-        X, Y, Z = 0., 0, 1
-        M = np.array([[X, Y, Z, 1.]]).T
-        P0 = get_Kl(params)
-        K = np.c_[P0, np.zeros(3)]
-        print K
-        sm = np.dot(K, M)
-        UV = sm / sm[2][0]
-        print np.array(UV, np.int32)
-
-        # Task0: Move camera center?
-
-        # TaskN: rectification
-
-        # Load images
-        img = cv2.imread(root + 'im0.png')#, 0)
-        cv2.circle(img, (447, 63), 63, (0, 0, 255), -1)
-
-        # Draw
-        small = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
-        # cv2.imshow('image', small)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        # Article:
-        # http://ece631web.groups.et.byu.net/Lectures/ECEn631%2014%20-%20Calibration%20and%20Rectification.pdf
-        #
-        # T = Ol-Or
-
+        do_it1()

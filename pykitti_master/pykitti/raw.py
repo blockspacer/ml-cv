@@ -47,6 +47,12 @@ class raw:
         P_rect_20 = np.reshape(filedata['P_rect_02'], (3, 4))
         P_rect_30 = np.reshape(filedata['P_rect_03'], (3, 4))
 
+
+        data['T_00'] = filedata['T_00']
+        data['T_01'] = filedata['T_01']
+        data['P_rect_00'] = P_rect_00
+        data['P_rect_01'] = P_rect_10
+
         # Create 4x4 matrix from the rectifying rotation matrix
         R_rect_00 = np.eye(4)
         R_rect_00[0:3, 0:3] = np.reshape(filedata['R_rect_00'], (3, 3))
