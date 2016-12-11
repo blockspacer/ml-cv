@@ -16,7 +16,8 @@ Robst:
 - следить чтобы тренировочные данные не отличались от тестовых - 0.007 -> 0.035 [2]
 
 Overfitting:
-!! -"It models the data as two blobs and interprets the few red points inside the green cluster as outliers (noise). In practice, this could lead to better generalization on the test set." understood why ANN better SVM
+!! -"It models the data as two blobs and interprets the few red points inside the green cluster as outliers (noise). 
+In practice, this could lead to better generalization on the test set." understood why ANN better SVM
 
 //======================================================================
 
