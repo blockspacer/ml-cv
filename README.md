@@ -1,3 +1,5 @@
+!!!!!!!!! Google ML codestyle and links !!!!!!!!!!!!!
+
 1. "Лекция 2. Методы решения задачи классификации и регрессии" Youtube
 2. "Лекция 4. Преобразование признаков" 
 3. http://cs231n.github.io/neural-networks-1/
@@ -66,3 +68,8 @@ From skikit-learn:
 //=====================================================================
 2d/3d + optic
 Descr + Inf. stat -> ml -> math optimize -> soft+hard
+
+
+//======================= CV ========================
+gpu
+http://stackoverflow.com/questions/31599368/strange-error-with-cudareprojectimageto3d-and-opencv-3-0
