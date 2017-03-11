@@ -68,6 +68,8 @@ import cv2
 import numpy as np
 import numpy
 
+from numpy.linalg import norm
+
 print cv2.__version__
 
 from matplotlib import pyplot as plt
@@ -142,39 +144,103 @@ def find_stereopairs():
 # fixme: может сразу сделать стерео калибровку
 # http://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
 
+ply_header = '''ply
+format ascii 1.0
+element vertex %(vert_num)d
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+end_header
+'''
+
+
+def write_ply(fn, verts, colors):
+    verts = verts.reshape(-1, 3)
+    colors = colors.reshape(-1, 3)
+    verts = np.hstack([verts, colors])
+
+    res = []
+
+    for i in range(len(verts)):
+        if norm(verts[i][0:3]) < 30:
+            res.append(verts[i])
+
+    with open(fn, 'wb') as f:
+        f.write((ply_header % dict(vert_num=len(res))).encode('utf-8'))
+        np.savetxt(f, res, fmt='%f %f %f %d %d %d ')
+
+
+def get_correction():
+    Ry = np.matrix(np.eye(4))
+    Ry[0, 0] = 0
+    Ry[2, 2] = 0
+    Ry[0, 2] = 1
+    Ry[2, 0] = -1
+
+    Rx = np.matrix(np.eye(4))
+    Rx[1, 1] = 0
+    Rx[2, 2] = 0
+    Rx[1, 2] = 1
+    Rx[2, 1] = -1
+
+    R = Rx * Ry * np.matrix(np.eye(4))
+
+    R[2, 3] = 1.67
+
+    return R
+
+
 def do_it():
-    basedir = '/home/zaqwes/tools/datasets'
+    basedir = '/mnt/d1/datasets'
     date = '2011_09_26'
-    drive = '0052'
+    drive = '0056'
 
     # The range argument is optional - default is None, which loads the whole dataset
-    dataset = pykitti.raw(basedir, date, drive, range(0, 50, 5))
-
-    # Data are loaded only if requested
+    dataset = pykitti.raw(basedir, date, drive, range(75, 90, 1))
     dataset.load_calib()
-    print dataset.calib.P_rect_00
-    print dataset.calib.P_rect_01
-
-    # Calc back, to real coord system
-    print dataset.calib.T_01
-    # print dataset.P_rect_01
-
+    c = dataset.calib
     dataset.load_gray(format='cv2')  # Loads images as uint8 grayscale
-    # dataset.load_rgb(format='cv2')  # Loads images as uint8 with BGR ordering
 
-    stereo = cv2.StereoBM_create(numDisparities=128, blockSize=15)
-    disp_gray = stereo.compute(dataset.gray[0].left, dataset.gray[0].right)
+    # select
+    idx = 7
+    l = dataset.gray[idx].left
+    r = dataset.gray[idx].right
 
-    # fixme: что лежит по этим индексам
-    # это номер стереопары изображений - 0-1, 2-3 камеры
-    #print dataset.gray[1]
+    # configure
+    stereo = cv2.StereoBM_create(numDisparities=64, blockSize=11)
+    print help(stereo)
+    stereo.setUniquenessRatio(20)
+    stereo.setTextureThreshold(100)
 
-    # plt.imshow(disp_gray)
-    # plt.show()
+    # run
+    disp = stereo.compute(l, r)
+    disp = np.array(disp, dtype=np.float32) / 16.
 
-    # How calc Q?
+    # to 3d
+    cx = c.P_rect_00[0, 2]
+    cy = c.P_rect_00[1, 2]
+    f = c.P_rect_00[0, 0]
+    cx_r = c.P_rect_01[0, 2]
+    Tx = c.T_01[0]
+    Q = np.array([[1, 0, 0, - cx],
+                  [0, 1, 0, - cy],
+                  [0, 0, 0, f],
+                  [0, 0, -1. / Tx, (cx - cx_r) / Tx]])
 
-    # dataset.gray
+    Q = get_correction() * np.matrix(Q)
+
+    points = cv2.reprojectImageTo3D(disp, Q)
+    colors = cv2.cvtColor(l, cv2.COLOR_GRAY2RGB)
+    mask = disp > disp.min()
+    out_points = points[mask]
+    out_colors = colors[mask]
+    write_ply('out.ply', out_points, out_colors)
+
+    # trouble
+    # fixme: в датасете все в движении, как вычесть бэграунд?
 
 
 def do_it1():
