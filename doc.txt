@@ -1,0 +1,11 @@
+Optimizers:
+- tf
+- http://docs.opencv.org/3.0-beta/modules/core/doc/optim.html
+
+Opt.:
+http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
+
+Integer:
+
+Constrained:
+https://stackoverflow.com/questions/33694368/tensorflow-best-way-to-implement-weight-constraints
