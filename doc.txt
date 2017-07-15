@@ -9,3 +9,6 @@ Integer:
 
 Constrained:
 https://stackoverflow.com/questions/33694368/tensorflow-best-way-to-implement-weight-constraints
+
+From Google:
+https://developers.google.com/optimization/mip/integer_opt
