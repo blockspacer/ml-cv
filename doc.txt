@@ -12,3 +12,9 @@ https://stackoverflow.com/questions/33694368/tensorflow-best-way-to-implement-we
 
 From Google:
 https://developers.google.com/optimization/mip/integer_opt
+
+#############################################
+Streaming
+
+tf:
+https://stackoverflow.com/questions/37980296/how-can-i-stream-data-directly-into-tensorflow-as-opposed-to-reading-files-on-di
