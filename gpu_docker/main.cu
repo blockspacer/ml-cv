@@ -61,39 +61,43 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 
 	uint32_t true_res = 0;
 	{
-		int k1 = 3;
+		int k1 = 5;//3;
 		int hk1 = k1 >> 1;
 
 		uint32_t res = 0;
 		uint32_t mask = 0x01 << (k1 * k1 - 1);
 
-		// fixme: not work for me
-		// uint32_t Imean = 0;
-		// for (int dx = -hk1; dx < hk1; ++dx) {
-		// 	for (int dy = -hk1; dy < hk1; ++dy) {
-		// 		int x = clamp(gx + dx, 0, w);
-		// 		int y = clamp(gy + dy, 0, h);
-		// 		uchar Ie = in[y * w + x];
-		// 		Imean += Ie;
-		// 	}
-		// }
-		// Imean /= k1 * k1;
+		uint32_t Imean = 0;
+		for (int dx = -hk1; dx <= hk1; ++dx) {
+			for (int dy = -hk1; dy <= hk1; ++dy) {
+				int x = clamp(gx + dx, 0, w);
+				int y = clamp(gy + dy, 0, h);
+				uchar Ie = in[y * w + x];
+				Imean += Ie;
+			}
+		}
+		Imean /= k1 * k1;
 
-		uchar I = in[pos];
-		for (int dx = -hk1; dx < hk1; ++dx) {
-			for (int dy = -hk1; dy < hk1; ++dy) {
+		uchar I = Imean;//in[pos];
+		for (int dx = -hk1; dx <= hk1; ++dx) {
+			for (int dy = -hk1; dy <= hk1; ++dy) {
+				if(dy == 0 && dx == 0){
+					continue;
+				}
 				int x = clamp(gx + dx, 0, w);
 				int y = clamp(gy + dy, 0, h);
 
 				uchar Ie = in[y * w + x];
 				if (I < Ie) {
-					res |= mask;
+					res += 1;//mask;
 				} else {
-					res &= ~(mask);
+					//res &= ~(mask);
 				}
-				mask >>= 1;
+				//mask >>= 1;
+				res <<= 1;
 			}
 		}
+		res >>= 1;
 		true_res = res;
 	}
 
@@ -104,9 +108,23 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 		uint32_t res = 0;
 		uint32_t mask = 0x01 << (k1 * k1 - 1);
 
-		uchar I = in_xsobel[pos];
-		for (int dx = -hk1; dx < hk1; ++dx) {
-			for (int dy = -hk1; dy < hk1; ++dy) {
+		uint32_t Imean = 0;
+		for (int dx = -hk1; dx <= hk1; ++dx) {
+			for (int dy = -hk1; dy <= hk1; ++dy) {
+				int x = clamp(gx + dx, 0, w);
+				int y = clamp(gy + dy, 0, h);
+				uchar Ie = in_xsobel[y * w + x];
+				Imean += Ie;
+			}
+		}
+		Imean /= k1 * k1;
+
+		uchar I = Imean;//in_xsobel[pos];
+		for (int dx = -hk1; dx <= hk1; ++dx) {
+			for (int dy = -hk1; dy <= hk1; ++dy) {
+				if(dy == 0 && dx == 0){
+					continue;
+				}
 				int x = clamp(gx + dx, 0, w);
 				int y = clamp(gy + dy, 0, h);
 
@@ -119,10 +137,9 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 				mask >>= 1;
 			}
 		}
-		// res <<= 8;
-		// // true_res <<= 8;
-
-		// true_res = res;//true_res | res;
+		res >>= 1;
+		res <<= 8 * 3;
+		true_res = true_res | res;
 	}
 
 
@@ -306,10 +323,13 @@ struct gpu_matching_handle_t {
 
 int main(void) {
 
-	string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0052_sync/";
+	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0052_sync/";
+	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0018_sync/";
+	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_056_sync/";
+	string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0056_sync/";
 
-	string fi0 = root + "image_00/data/0000000000.png";
-	string fi1 = root + "image_01/data/0000000000.png";
+	string fi0 = root + "image_00/data/0000000280.png";
+	string fi1 = root + "image_01/data/0000000280.png";
 	Mat im0 = imread(fi0.c_str(), 0);
 	Mat im1 = imread(fi1.c_str(), 0);
 
@@ -324,12 +344,12 @@ int main(void) {
 	int scale = 1;
   	int delta = 128;
   	int ddepth = CV_8U;
-  	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-  	Sobel( im0, xsob0, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-  	Sobel( im1, xsob1, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+  	Scharr( im0, xsob0, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+  	Scharr( im1, xsob1, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+  	// Sobel( im0, xsob0, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+  	// Sobel( im1, xsob1, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
   	imwrite("out0_sobel.png", xsob0);
   	imwrite("out1_sobel.png", xsob1);
-
 
 	//
 
@@ -339,15 +359,26 @@ int main(void) {
 
 	gpu_matching_handle_t mhandle(N, im0.data, im1.data, xsob0.data, xsob1.data);
 
+	//
+	//
 	// census
+	census(mhandle.d_i0, mhandle.d_i0_xsobel, mhandle.d_i0_census, w, h);
+	census(mhandle.d_i1, mhandle.d_i1_xsobel, mhandle.d_i1_census, w, h);
+
 	vector<uint32_t> h_i0_census(N);
 	vector<uint32_t> h_i1_census(N);
-	census(mhandle.d_i0, mhandle.d_i0_xsobel, mhandle.d_i0_census, w, h);
 
 	gpuErrchk(
 			cudaMemcpy(&h_i0_census[0], mhandle.d_i0_census,
 					N * sizeof(uint32_t), cudaMemcpyDeviceToHost));
+	gpuErrchk(
+			cudaMemcpy(&h_i1_census[0], mhandle.d_i1_census,
+					N * sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
+	//
+	//
+	//
+	//
 	// https://stackoverflow.com/questions/14581806/can-not-use-cv-32uc1
 	Mat A = Mat(h, w, CV_32S, &h_i0_census[0]);
 
@@ -355,21 +386,21 @@ int main(void) {
 	A.convertTo(B, CV_8U);
 	imwrite("h0_census.png", B);
 
-	census(mhandle.d_i1, mhandle.d_i0_xsobel, mhandle.d_i1_census, w, h);
-	gpuErrchk(
-			cudaMemcpy(&h_i1_census[0], mhandle.d_i1_census,
-					N * sizeof(uint32_t), cudaMemcpyDeviceToHost));
+	for(int i = 0; i < h_i1_census.size(); ++i) {
+		// cout << std::bitset<32>(h_i0_census[i]);
+		// cout << " " << std::bitset<32>(h_i1_census[i]) << endl;
+	}
 
 	A = Mat(h, w, CV_32S, &h_i1_census[0]);
-
 	A.convertTo(B, CV_8U);
-	imwrite("out1.png", B);
+	imwrite("h1_census.png", B);
 
 	// matching
 	{
+		const int tmp = 32;
 		vector<short> h_disp(N, 0);
-		const dim3 wg(w / 16 + 1, h / 16 + 1);
-		const dim3 bs(16, 16);
+		const dim3 wg(w / tmp + 1, h / tmp + 1);
+		const dim3 bs(tmp, tmp);
 		// measure
 		// https://devblogs.nvidia.com/parallelforall/how-implement-performance-metrics-cuda-cc/
 		cudaEvent_t start, stop;
@@ -378,7 +409,9 @@ int main(void) {
 
 		cudaEventRecord(start);
 
-		sbm_census<<<wg, bs>>>(mhandle.d_i0_census, mhandle.d_i1_census, w, h,
+		sbm_census<<<wg, bs>>>(
+				mhandle.d_i0_census, 
+				mhandle.d_i1_census, w, h,
 				mhandle.d_disp_i16, WS);
 
 		gpuErrchk(cudaPeekAtLastError());

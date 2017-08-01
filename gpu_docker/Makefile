@@ -13,7 +13,7 @@ NVCC=/usr/local/cuda-8.0/bin/nvcc
 # fixme: ./a.out bash: ./a.out: Permission denied
 
 #/usr/local/cuda-8.0/bin/nvcc
-LIBS=`pkg-config --cflags --libs opencv`
+LIBS=`pkg-config --cflags --libs opencv ` -std=c++11
 
 all:
 	$(NVCC) main.cu -o census $(LIBS)
