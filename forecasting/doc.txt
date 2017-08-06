@@ -1,0 +1,36 @@
+at1. want predict back and forth
+
+# ML
+http://www.cardinalpath.com/forecasting-with-machine-learning-techniques/
+
+# Statistic
+fpp
+
+# Kalman (?? Отдельно?)
+
+# Compare
+ARIMA vs LSTM and Going DEEEPER
+(!!!)https://datascience.stackexchange.com/questions/12721/time-series-prediction-using-arima-vs-lstm
+
+"You mention that you have tried both algorithms and that you are simply trying to figure out which one is better, which leads me to think you may be having more trouble with the data science process and cross validation than with the specifics of the models.
+
+Time series in general:
+
+Time series, in general, are difficult to forecast. If they were easy to forecast then all data scientists would be wealthy, having accurately forecast the value of all of the stocks. The reality is that hedge funds, on average, do not outperform the market and that time series forecasting is typically very poor and applies only to very short durations. The main problems are that there is a lot of noise, there are many hidden influences, models are overly simplistic, influencers do not behave as we think they should, the interplay between linearity and nonlinearity is subtle and confusing, ... ad infinitum."
+
+
+"I don't know enough about LSTM to add much here. I will add that red flags tend to be raised when someone begins at data science exercise with deep learning. "
+
+# Qualitiy checm
+residual (random, non correlated)
+
+# SUMMARY
+https://www.analyticsvidhya.com/blog/2016/02/time-series-forecasting-codes-python/
+
+
+# Forecasting methods
+https://datascience.stackexchange.com/questions/17793/forecasting-time-series-method-selection?rq=1
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3641111/
+
+# Fuzzy
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.403.3186&rep=rep1&type=pdf
