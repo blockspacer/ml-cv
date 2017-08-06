@@ -61,7 +61,7 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 
 	uint32_t true_res = 0;
 	{
-		int k1 = 5;//3;
+		int k1 = 3; //5;//3;
 		int hk1 = k1 >> 1;
 
 		uint32_t res = 0;
@@ -78,10 +78,10 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 		}
 		Imean /= k1 * k1;
 
-		uchar I = Imean;//in[pos];
+		uchar I = Imean; //in[pos];
 		for (int dx = -hk1; dx <= hk1; ++dx) {
 			for (int dy = -hk1; dy <= hk1; ++dy) {
-				if(dy == 0 && dx == 0){
+				if (dy == 0 && dx == 0) {
 					continue;
 				}
 				int x = clamp(gx + dx, 0, w);
@@ -89,7 +89,7 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 
 				uchar Ie = in[y * w + x];
 				if (I < Ie) {
-					res += 1;//mask;
+					res += 1; //mask;
 				} else {
 					//res &= ~(mask);
 				}
@@ -102,7 +102,7 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 	}
 
 	{
-		int k1 = 3;
+		int k1 = 5; //3;
 		int hk1 = k1 >> 1;
 
 		uint32_t res = 0;
@@ -119,10 +119,10 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 		}
 		Imean /= k1 * k1;
 
-		uchar I = Imean;//in_xsobel[pos];
+		uchar I = Imean; //in_xsobel[pos];
 		for (int dx = -hk1; dx <= hk1; ++dx) {
 			for (int dy = -hk1; dy <= hk1; ++dy) {
-				if(dy == 0 && dx == 0){
+				if (dy == 0 && dx == 0) {
 					continue;
 				}
 				int x = clamp(gx + dx, 0, w);
@@ -138,10 +138,9 @@ void cencus_i3_xsobel5(const uchar* in, const uchar* in_xsobel, uint32_t* out,
 			}
 		}
 		res >>= 1;
-		res <<= 8 * 3;
+		res <<= 8; // * 3;
 		true_res = true_res | res;
 	}
-
 
 	out[pos] = true_res;
 }
@@ -323,18 +322,18 @@ struct gpu_matching_handle_t {
 
 int main(void) {
 
-	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0052_sync/";
-	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0018_sync/";
-	// string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_056_sync/";
-	string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0056_sync/";
+	 string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0052_sync/";
+//	string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0018_sync/";
+//	 string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0056_sync/";
+//	string root = "/mnt/d1/datasets/2011_09_26/2011_09_26_drive_0056_sync/";
 
-	string fi0 = root + "image_00/data/0000000280.png";
-	string fi1 = root + "image_01/data/0000000280.png";
+	string fi0 = root + "image_00/data/0000000077.png";
+	string fi1 = root + "image_01/data/0000000077.png";
 	Mat im0 = imread(fi0.c_str(), 0);
 	Mat im1 = imread(fi1.c_str(), 0);
 
 	Mat dst0, dst1, xsob0, xsob1;
-	double f = 0.4;
+	double f = 0.25;
 	cv::resize(im0, dst0, Size(0, 0), f, f);
 	im0 = dst0;
 	cv::resize(im1, dst1, Size(0, 0), f, f);
@@ -342,14 +341,14 @@ int main(void) {
 
 	//
 	int scale = 1;
-  	int delta = 128;
-  	int ddepth = CV_8U;
-  	Scharr( im0, xsob0, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-  	Scharr( im1, xsob1, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-  	// Sobel( im0, xsob0, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-  	// Sobel( im1, xsob1, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-  	imwrite("out0_sobel.png", xsob0);
-  	imwrite("out1_sobel.png", xsob1);
+	int delta = 128;
+	int ddepth = CV_8U;
+	Scharr(im0, xsob0, ddepth, 0, 1, scale, delta, BORDER_DEFAULT);
+	Scharr(im1, xsob1, ddepth, 0, 1, scale, delta, BORDER_DEFAULT);
+	// Sobel( im0, xsob0, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	// Sobel( im1, xsob1, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	imwrite("out0_sobel.png", xsob0);
+	imwrite("out1_sobel.png", xsob1);
 
 	//
 
@@ -357,7 +356,8 @@ int main(void) {
 	int h = im0.rows;
 	int N = w * h;
 
-	gpu_matching_handle_t mhandle(N, im0.data, im1.data, xsob0.data, xsob1.data);
+	gpu_matching_handle_t mhandle(N, im0.data, im1.data, xsob0.data,
+			xsob1.data);
 
 	//
 	//
@@ -386,7 +386,7 @@ int main(void) {
 	A.convertTo(B, CV_8U);
 	imwrite("h0_census.png", B);
 
-	for(int i = 0; i < h_i1_census.size(); ++i) {
+	for (int i = 0; i < h_i1_census.size(); ++i) {
 		// cout << std::bitset<32>(h_i0_census[i]);
 		// cout << " " << std::bitset<32>(h_i1_census[i]) << endl;
 	}
@@ -409,9 +409,7 @@ int main(void) {
 
 		cudaEventRecord(start);
 
-		sbm_census<<<wg, bs>>>(
-				mhandle.d_i0_census, 
-				mhandle.d_i1_census, w, h,
+		sbm_census<<<wg, bs>>>(mhandle.d_i0_census, mhandle.d_i1_census, w, h,
 				mhandle.d_disp_i16, WS);
 
 		gpuErrchk(cudaPeekAtLastError());
@@ -433,6 +431,10 @@ int main(void) {
 		A = Mat(h, w, CV_16S, &h_disp[0]);
 
 		A.convertTo(B, CV_8U);
+
+		cv::resize(B, dst1, Size(0, 0), 1 / f, 1 / f);
+		B = dst1;
+
 		imwrite("d_disp.png", B);
 	}
 
