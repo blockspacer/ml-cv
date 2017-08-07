@@ -34,3 +34,11 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3641111/
 
 # Fuzzy
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.403.3186&rep=rep1&type=pdf
+
+# SOme summary
+https://www.cs.cmu.edu/afs/cs/academic/class/15782-f06/slides/timeseries.pdf - dsp + ...
+
+# Courses
+https://www.datacamp.com/tracks/time-series-with-r - looks bad
+udacity
+https://classroom.udacity.com/courses/ud980/lessons/7bcd2c42-a582-4e07-967c-f93a52de59f1/concepts/3bd0b742-e58c-476c-a44c-b316c19a6f81
