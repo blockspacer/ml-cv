@@ -7,7 +7,7 @@ with tf.Session(''):
   zero_out_module.zero_out([[1, 2], [3, 4]]).eval()
 
 # Prints
-print np.array([[1, 0], [0, 0]], dtype=np.int32)
+print(np.array([[1, 0], [0, 0]], dtype=np.int32))
 
 class ZeroOutTest(tf.test.TestCase):
   def testZeroOut(self):
