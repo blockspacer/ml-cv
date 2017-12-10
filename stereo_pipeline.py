@@ -475,8 +475,42 @@ if __name__ == '__main__':
 
     np.set_printoptions(precision=4, suppress=True)
 
-    if True:
+    if False:
         do_it()
 
     if False:
         do_it1()
+
+    if 1:
+        # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+        a = np.array([0, 0, 1])  # unit vectors
+        b = np.array([1, 1, 1])
+        b = b / norm(b)  # unit vectors
+        v = np.cross(a, b)
+
+        print a, b
+
+        ssc = np.matrix([[0, -v[2], v[1]],
+                         [v[2], 0, -v[0]],
+                         [-v[1], v[0], 0]])
+
+        ssc2 = ssc * ssc
+        I = np.eye(3, 3)
+        s = norm(v)
+        c = np.dot(a, b)
+
+        R = I + ssc + ssc2 * (1 - c) / s ** 2
+
+        print R
+        a = np.matrix(a).T
+        print R * a
+
+    if 1:
+        # "Finding quaternion representing the rotation from one vector to another"
+        # https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
+        # https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
+        # https://habrahabr.ru/sandbox/107998/
+        #
+        # https://ru.coursera.org/learn/kinematics/lecture/0Pbt0/kvatierniony-osnovnyie-opriedielieniia
+
+        pass
