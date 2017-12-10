@@ -28,6 +28,24 @@ void draw_points(Mat img, const vector<Point2f>& points0,
 }
 
 class DatasetSplitter {
+	// https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.histogram.html
+	// просто по числу, возможно для итогового будет два селекта
+	//
+};
+
+// metrics
+// inside chess ступеньками, но еще и по области картинки
+class Parabola3P {
+public:
+	Parabola3P(Point2f p1, Point2f p2, Point2f p3) {
+		ps = vector<Point2f> { p1, p2, p3 };
+	}
+
+	float getValue(float x) {
+		// https://math.stackexchange.com/questions/889569/finding-a-parabola-from-three-points-algebraically
+	}
+
+	vector<Point2f> ps;
 };
 
 // Хочется не искать шахматки заново для проверки линейности
@@ -135,6 +153,10 @@ int main() {
 	draw_points(img, imagePoints_out_real, imagePoints_reproj);
 	draw_points(img, imagePoints_reproj, 128 + 32, 0, 30);
 
+	// metric
+	// по краям в три раза, от оптического центра
+	//
+
 	imwrite("/tmp/proj.png", img);
 
 	// eval metirx
@@ -142,9 +164,7 @@ int main() {
 	//// split to bins template
 
 	{
-		// https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.histogram.html
-		// просто по числу, возможно для итогового будет два селекта
-		//
+
 	}
 
 	return 0;
