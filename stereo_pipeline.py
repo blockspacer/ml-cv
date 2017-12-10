@@ -70,7 +70,9 @@ import numpy
 
 from numpy.linalg import norm
 
-print cv2.__version__
+from sklearn import linear_model
+
+# print cv2.__version__
 
 from matplotlib import pyplot as plt
 
@@ -79,6 +81,9 @@ import sys
 
 sys.path.append("pykitti_master")  # fixme: baaaad...
 import pykitti
+
+import scipy.optimize
+import functools
 
 
 def load_params(fn):
@@ -165,7 +170,7 @@ def write_ply(fn, verts, colors):
     res = []
 
     for i in range(len(verts)):
-        if norm(verts[i][0:3]) < 30:
+        if norm(verts[i][0:3]) < 60:
             res.append(verts[i])
 
     with open(fn, 'wb') as f:
@@ -173,45 +178,96 @@ def write_ply(fn, verts, colors):
         np.savetxt(f, res, fmt='%f %f %f %d %d %d ')
 
 
-def get_correction():
+###########################################################################
+
+def get_correction_sim():
     Ry = np.matrix(np.eye(4))
-    Ry[0, 0] = 0
-    Ry[2, 2] = 0
-    Ry[0, 2] = 1
-    Ry[2, 0] = -1
+    # Ry[0, 0] = 0
+    # Ry[2, 2] = 0
+    # Ry[0, 2] = 0
+    # Ry[2, 0] = 0
 
     Rx = np.matrix(np.eye(4))
-    Rx[1, 1] = 0
-    Rx[2, 2] = 0
-    Rx[1, 2] = 1
-    Rx[2, 1] = -1
+    theta = 0.25
+    Rx[1, 1] = np.cos(theta)
+    Rx[2, 2] = np.cos(theta)
+    Rx[1, 2] = -np.sin(theta)
+    Rx[2, 1] = np.sin(theta)
 
     R = Rx * Ry * np.matrix(np.eye(4))
 
-    R[2, 3] = 1.67
+    # R[2, 3] = 1.67
 
     return R
+
+
+def get_correction_end():
+    R = np.matrix(np.eye(4))
+
+    Rr = np.matrix([[0.9999, -0.0058, 0.0105],
+                    [-0.0058, 0.5404, 0.8414],
+                    [-0.0105, -0.8414, 0.5403]])
+
+    Rr = np.matrix([[0.9999, -0.0058, -0.0105],
+                    [-0.0058, 0.5404, -0.8414],
+                    [0.0105, 0.8414, 0.5403]])
+
+    # R[0:3, 0:3] = Rr
+
+    # [0.0199  1.5901  0.3883]
+    R[0, 3] = -0.0199
+    R[1, 3] = -1.5901
+    R[2, 3] = -0.3883
+
+    return R
+
+
+def plane(x, y, params):
+    # def plane(x, z, params):
+    # print z, x
+    a = params[0]
+    b = params[1]
+    c = params[2]
+    z = a * x + b * y + c
+    # y = a * x + b * z + c
+    return z
+
+
+def error(params, points):
+    result = 0
+    for (x, y, z) in points:
+        plane_z = plane(x, y, params)
+        diff = abs(plane_z - z)
+        result += diff ** 2
+    return result
+
+
+def cross(a, b):
+    return [a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]]
 
 
 def do_it():
     basedir = '/mnt/d1/datasets'
     date = '2011_09_26'
     drive = '0056'
+    raw = True
 
     # The range argument is optional - default is None, which loads the whole dataset
-    dataset = pykitti.raw(basedir, date, drive, range(75, 90, 1))
+    dataset = pykitti.raw(basedir, date, drive, range(82, 83, 1))
     dataset.load_calib()
     c = dataset.calib
     dataset.load_gray(format='cv2')  # Loads images as uint8 grayscale
 
     # select
-    idx = 7
+    idx = 0
     l = dataset.gray[idx].left
     r = dataset.gray[idx].right
 
     # configure
     stereo = cv2.StereoBM_create(numDisparities=64, blockSize=11)
-    print help(stereo)
+    # print help(stereo)
     stereo.setUniquenessRatio(20)
     stereo.setTextureThreshold(100)
 
@@ -230,17 +286,113 @@ def do_it():
                   [0, 0, 0, f],
                   [0, 0, -1. / Tx, (cx - cx_r) / Tx]])
 
-    Q = get_correction() * np.matrix(Q)
+    # fixme: calc correction
+    if not raw:
+        Q = get_correction_end() * get_correction_sim() * np.matrix(Q)
+    else:
+        Q = get_correction_sim() * np.matrix(Q)
 
     points = cv2.reprojectImageTo3D(disp, Q)
-    colors = cv2.cvtColor(l, cv2.COLOR_GRAY2RGB)
-    mask = disp > disp.min()
-    out_points = points[mask]
-    out_colors = colors[mask]
-    write_ply('out.ply', out_points, out_colors)
 
-    # trouble
-    # fixme: в датасете все в движении, как вычесть бэграунд?
+    colors = cv2.cvtColor(l, cv2.COLOR_GRAY2RGB)
+    # mask = disp > disp.min()
+    mask = np.zeros(points.shape, dtype=np.bool)
+    mask[220:, 400: 800] = 1
+
+    # plt.imshow(mask)
+    # plt.show()
+
+
+    out_points = points[mask]
+    out_points_clone = np.copy(out_points)
+    print out_points_clone.shape
+    out_colors = colors[mask]
+    if raw:
+        # fit plain
+        data_frame = out_points_clone.reshape(-1, 3)
+        data_frame_new = []
+
+        for r in data_frame:
+            have_inf = False
+            for p in r:
+                if p == np.inf or abs(p) > 40:  # outliers rejection
+                    have_inf = True
+
+            if not have_inf:
+                data_frame_new.append(r)
+
+        data_frame_new = np.array(data_frame_new)
+
+        X_train = data_frame_new[:, 0:2]
+        y_train = data_frame_new[:, 2]
+        print X_train
+
+        # plt.plot(X_train[:, 0], y_train, 'o')
+        # plt.plot(X_train[:, 1], y_train, 'o')
+        # plt.axes().set_aspect('equal', 'datalim')
+        # plt.grid()
+        # plt.show()
+
+        # Create linear regression object
+        regr = linear_model.LinearRegression(fit_intercept=True)
+        # regr = linear_model.RANSACRegressor()  # fit_intercept=True)
+
+        # Train the model using the training sets
+        # https://stackoverflow.com/questions/20699821/find-and-draw-regression-plane-to-a-set-of-points
+        regr.fit(X_train, y_train)
+        # z = ax + by + c
+        # -dz + ax + by = -c
+        a = regr.coef_[0]
+        b = regr.coef_[1]
+        c = regr.intercept_
+        d = -1  # z
+
+        N = np.array([a, b, d])
+        n = N / norm(N)
+        n_coord = np.array([0, 0, 1])  # by z
+
+        # T - ?
+        # https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010/1.-vectors-and-matrices/part-c-parametric-equations-for-curves/session-16-intersection-of-a-line-and-a-plane/MIT18_02SC_we_9_comb.pdf
+        # http://www.ambrsoft.com/TrigoCalc/Plan3D/PlaneLineIntersection_.htm
+        # x=at, y = bt, z=ct
+        print n
+        A, B, C, D = a, b, d, c
+        a_, b_, c_ = n[0], n[1], n[2]
+        x1, y1, z1 = 0, 0, 0
+
+        x = x1 - a_ * (A * x1 + B * y1 + c_ * z1 + D) / (A * a_ + B * b_ + C * c_)
+        y = y1 - b_ * (A * x1 + B * y1 + c_ * z1 + D) / (A * a_ + B * b_ + C * c_)
+        z = z1 - c_ * (A * x1 + B * y1 + c_ * z1 + D) / (A * a_ + B * b_ + C * c_)
+
+        out_points_ = np.array([x, y, z])
+        # out_points_ = np.array([A, B, C])
+        # out_points_ = np.array(n * 10)
+        out_colors_ = np.array([255, 0, 0])
+        print out_points_
+
+        out_points = np.concatenate([out_points, out_points_])
+        out_colors = np.concatenate([out_colors, out_colors_])
+
+        # # fixme: не соптимизилось, из-за outliers, too long
+        # fun = functools.partial(error, points=data_frame_new)
+        # params0 = [0., 0., 0.]
+        # res = scipy.optimize.minimize(fun, params0)
+        # print params0, res
+
+        # trouble
+        # fixme: в датасете все в движении, как вычесть бэграунд?
+
+        # R matrix
+        # https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+        # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+        kk = np.cross(n_coord, n)
+        k = kk / norm(kk)
+        print k
+        R = cv2.Rodrigues(k, None)
+        print R[0]
+
+    # Eval
+    write_ply('out.ply', out_points, out_colors)
 
 
 def do_it1():
