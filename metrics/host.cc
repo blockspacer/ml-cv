@@ -120,22 +120,14 @@ int main() {
 
 	// internal
 	vector<float> plain_K { 5299.313, 0, 1263.818, 0, 5299.313, 977.763, 0, 0, 1 };
-	vector<float> plain_D_in { 3, 3, 0, 0 };
-	vector<float> plain_D_out { -plain_D_in[0], -plain_D_in[1], 0, 0 };
-	vector<float> d_real = plain_D_out;
-	d_real[0] += 0.3;
-	d_real[1] += 0.3;
+	vector<float> d_gt_inv { 3, 3, 0, 0 };
+	vector<float> d_gt { -d_gt_inv[0], -d_gt_inv[1], 0, 0 }; // inv to sim
 
-	Mat cameraMatrix(3, 3, CV_32FC1, &plain_K.front());
-	Mat distCoeffs_in(1, 4, CV_32FC1, &plain_D_in.front());
-	Mat d_estimation(1, 4, CV_32FC1, &plain_D_out.front());
+	Mat k_gt(3, 3, CV_32FC1, &plain_K.front());
 
 	Mat img_tmp0, img_tmp1;
-	undistort(img, img_tmp0, cameraMatrix, distCoeffs_in);
+	undistort(img, img_tmp0, k_gt, d_gt_inv);  // портим
 	img = img_tmp0;
-
-	vector<Point2f> imagePoints_in_last;
-	vector<Point2f> imagePoints_out_norm;
 
 	// external
 	auto z = 5.0f + 0;
@@ -152,49 +144,55 @@ int main() {
 	rvec.at<float>(0, 0) = 1.5;
 
 	// fixme: why out??? inverse transform? what for omnidir?
-	projectPoints(objectPoints, rvec, tvec, cameraMatrix, d_estimation,
-			imagePoints_in_last);
-	draw_points(img, imagePoints_in_last, 128, 0, 15, true);
+	vector<Point2f> imagePoints_in;
+	projectPoints(objectPoints, rvec, tvec, k_gt, d_gt, imagePoints_in);
+	draw_points(img, imagePoints_in, 128, 0, 15, true);
 
 	//////////////////////////////////////
+	//
 	// fixme: нет такого большого прироста в детектировании, для omnidir похоже нужно
 	//   искать r and t и полностью репрожектить
 	// Восстанавливаем
-	undistort(img, img_tmp1, cameraMatrix, d_estimation);
+
+	vector<float> d_estimated = d_gt;
+	Mat k_estimated = k_gt.clone();
+	// add error
+	d_estimated[0] += 2.3;
+	d_estimated[1] += 1.3;
+	k_estimated.at<float>(0, 0) += 100;
+	k_estimated.at<float>(1, 1) += 100;
+
+	undistort(img, img_tmp1, k_estimated, d_estimated);
 	img = img_tmp1;
 
 	// most important part
-	undistortPoints(imagePoints_in_last, imagePoints_out_norm, cameraMatrix,
-			d_real);
+	vector<Point2f> imagePoints_out_norm;
+	undistortPoints(imagePoints_in, imagePoints_out_norm, k_estimated,
+			d_estimated);
 
-	float fxy = cameraMatrix.at<float>(0, 0);
-	float cx = cameraMatrix.at<float>(0, 2);
-	float cy = cameraMatrix.at<float>(1, 2);
+	float fxy = k_estimated.at<float>(0, 0);
+	float cx = k_estimated.at<float>(0, 2);
+	float cy = k_estimated.at<float>(1, 2);
 
 	vector<Point2f> imagePoints_out_real;
 	for (auto p : imagePoints_out_norm) {
 		Point2f new_p(p.x * fxy + cx, p.y * fxy + cy);
 		imagePoints_out_real.push_back(new_p);
 	}
-
-	// fixme: А как сделать solvePnP тут?
-	draw_points(img, imagePoints_out_real, 255, 0, 20);
-
-	// Stage N....
-
-	//undistortPoints
+	draw_points(img, imagePoints_out_real, 255, 0, 20, true);
 
 	// solvePnP
-	// fixme: how???
 	Mat new_rvec, new_tvec;
-	solvePnP(objectPoints, imagePoints_out_real, cameraMatrix, noArray(),
-			new_rvec, new_tvec);
+	solvePnP(objectPoints, imagePoints_out_real, k_gt, noArray(), new_rvec,
+			new_tvec);
 	vector<Point2f> imagePoints_reproj;
-	projectPoints(objectPoints, new_rvec, new_tvec, cameraMatrix, noArray(),
+	projectPoints(objectPoints, new_rvec, new_tvec, k_gt, noArray(),
 			imagePoints_reproj);
 	draw_points(img, imagePoints_out_real, imagePoints_reproj);
 	draw_points(img, imagePoints_reproj, 128 + 32, 0, 30);
 
+	////////////////////////////////////////////////////
+	//
 	// metric
 	// по краям в три раза, от оптического центра
 	// по шахматке ступенчато
