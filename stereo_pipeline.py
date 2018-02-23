@@ -252,10 +252,10 @@ def do_it():
     basedir = '/mnt/d1/datasets'
     date = '2011_09_26'
     drive = '0056'
-    raw = True
+    raw = False  # True
 
     # The range argument is optional - default is None, which loads the whole dataset
-    dataset = pykitti.raw(basedir, date, drive, range(82, 83, 1))
+    dataset = pykitti.raw(basedir, date, drive, range(81, 82, 1))
     dataset.load_calib()
     c = dataset.calib
     dataset.load_gray(format='cv2')  # Loads images as uint8 grayscale
@@ -295,9 +295,11 @@ def do_it():
     points = cv2.reprojectImageTo3D(disp, Q)
 
     colors = cv2.cvtColor(l, cv2.COLOR_GRAY2RGB)
-    # mask = disp > disp.min()
-    mask = np.zeros(points.shape, dtype=np.bool)
-    mask[220:, 400: 800] = 1
+    mask = disp > disp.min()
+
+    if raw:
+        mask = np.zeros(points.shape, dtype=np.bool)
+        mask[220:, 400: 800] = 1
 
     # plt.imshow(mask)
     # plt.show()
@@ -391,6 +393,23 @@ def do_it():
         R = cv2.Rodrigues(k, None)
         print R[0]
 
+    # to *.csv
+    print out_points.shape
+    to_csv = []
+    for r in out_points:
+        have_inf = False
+        for p in r:
+            if p == np.inf or abs(p) > 40:  # outliers rejection
+                have_inf = True
+
+        if not have_inf:
+            # data_frame_new.append(r)
+            to_csv.append(r)
+
+    to_csv = np.array(to_csv)
+    np.savetxt("/tmp/scene.csv", to_csv, delimiter=",", fmt='%10.5f')
+    # to_csv.tofile("/tmp/scene.csv", sep=',', format='%10.5f')
+
     # Eval
     write_ply('out.ply', out_points, out_colors)
 
@@ -475,13 +494,13 @@ if __name__ == '__main__':
 
     np.set_printoptions(precision=4, suppress=True)
 
-    if False:
+    if 1:
         do_it()
 
     if False:
         do_it1()
 
-    if 1:
+    if 0:
         # https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
         a = np.array([0, 0, 1])  # unit vectors
         b = np.array([1, 1, 1])
@@ -505,7 +524,7 @@ if __name__ == '__main__':
         a = np.matrix(a).T
         print R * a
 
-    if 1:
+    if 0:
         # "Finding quaternion representing the rotation from one vector to another"
         # https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
         # https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
