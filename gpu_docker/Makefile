@@ -15,8 +15,11 @@ NVCC=/usr/local/cuda-8.0/bin/nvcc
 #/usr/local/cuda-8.0/bin/nvcc
 LIBS=`pkg-config --cflags --libs opencv ` -std=c++11
 
-all:
-	$(NVCC) main.cu -o census $(LIBS)
+MINGW_GCC=C:\\mingw-w64\\x86_64-7.2.0-win32-seh-rt_v5-rev0\\mingw64\\bin\\x86_64-w64-mingw32-g++
+
+all: interp.cc
+	#$(NVCC) main.cu -o census $(LIBS)
+	$(MINGW_GCC) -std=c++11 interp.cc
 	
 	# doesn't work
 	#$(NVCC) main.cu -o census -Xlinker $(LIBS)
