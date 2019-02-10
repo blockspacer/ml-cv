@@ -494,7 +494,7 @@ if __name__ == '__main__':
 
     np.set_printoptions(precision=4, suppress=True)
 
-    if 1:
+    if 0:
         do_it()
 
     if False:
@@ -533,3 +533,93 @@ if __name__ == '__main__':
         # https://ru.coursera.org/learn/kinematics/lecture/0Pbt0/kvatierniony-osnovnyie-opriedielieniia
 
         pass
+
+    if 1:
+        # ray tracing
+        basedir = '/mnt/d1/datasets'
+        date = '2011_09_26'
+        drive = '0056'
+        raw = False  # True
+
+        # The range argument is optional - default is None, which loads the whole dataset
+        dataset = pykitti.raw(basedir, date, drive, range(81, 82, 1))
+        dataset.load_calib()
+        c = dataset.calib
+        dataset.load_gray(format='cv2')  # Loads images as uint8 grayscale
+
+        # select
+        idx = 0
+        l = dataset.gray[idx].left
+        r = dataset.gray[idx].right
+
+        # configure
+        stereo = cv2.StereoBM_create(numDisparities=64, blockSize=15)
+        # print help(stereo)
+        stereo.setUniquenessRatio(20)
+        stereo.setTextureThreshold(100)
+
+        # run
+        disp = stereo.compute(l, r)
+        disp = np.array(disp, dtype=np.float32) / 16.
+
+        # to 3d
+        cx_00 = c.P_rect_00[0, 2]
+        cy_00 = c.P_rect_00[1, 2]
+        f_00 = c.P_rect_00[0, 0]
+        cx_01 = c.P_rect_01[0, 2]
+        Tx = c.T_01[0]
+        Q = np.array([[1, 0, 0, - cx_00],
+                      [0, 1, 0, - cy_00],
+                      [0, 0, 0, f_00],
+                      [0, 0, -1. / Tx, (cx_00 - cx_01) / Tx]])
+
+        # # fixme: calc correction
+        # if not raw:
+        #     Q = get_correction_end() * get_correction_sim() * np.matrix(Q)
+        # else:
+        #     Q = get_correction_sim() * np.matrix(Q)
+        #
+        # points = cv2.reprojectImageTo3D(disp, Q)
+        #
+        # colors = cv2.cvtColor(l, cv2.COLOR_GRAY2RGB)
+        # mask = disp > disp.min()
+        #
+        # if raw:
+        #     mask = np.zeros(points.shape, dtype=np.bool)
+        #     mask[220:, 400: 800] = 1
+        #
+        # out_points = points[mask]
+        # out_colors = colors[mask]
+        # # Eval
+        # write_ply('out.ply', out_points, out_colors)
+
+        # Ray tracing for disp
+        # -1) задать плоскость в коорд камеры или еще как-то
+        # 0) для каждой точки
+        # 1) find ray vector
+        # 2) пересечь с плоскостью и найти XYZ, система координат в левой камере, типа Opencv
+        # 3) спроецировать на обе камеры и найти D
+
+        h, w = disp.shape
+        for y in range(h):
+            for x in range(w):
+                disp[y][x] = 128
+
+                # Центрованные координаты
+                xn = x - cx_00
+                yn = y - cy_00
+                fn = f_00
+                tg_ax = xn / fn
+                tg_ay = yn / fn
+
+                # Это синус угла между оптической осью и точкой на сенсоре
+                cos_ax_n = (1 / (1 + (1/tg_ax) ** 2)) ** 0.5
+
+                # Направляющие косинусы
+                print cos_ax_n * np.sign(xn)
+
+            # if y > 32:
+            break
+
+        plt.imshow(disp)
+        plt.show()
